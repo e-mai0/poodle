@@ -23,7 +23,7 @@ export default function ChatInterface({ weekId }: { weekId?: string }) {
                     content: "Good afternoon. I am ready to supervise your work on this topic. Please begin.",
                 },
             ],
-        }) as any;
+        } as any);
 
     return (
         <div className="flex flex-col h-full bg-white border-l border-neutral-200">

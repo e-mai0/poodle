@@ -25,8 +25,9 @@ Where:
 - $m$ is income
 `;
 
-export default function WeekPage({ params }: { params: { id: string; number: string } }) {
-    const weekId = `${params.id}-${params.number}`; // derived ID
+export default async function WeekPage({ params }: { params: Promise<{ id: string; number: string }> }) {
+    const { id, number } = await params;
+    const weekId = `${id}-${number}`; // derived ID
 
     return (
         <div className="flex flex-1 h-full overflow-hidden">
@@ -34,7 +35,7 @@ export default function WeekPage({ params }: { params: { id: string; number: str
             <div className="flex-1 flex flex-col min-w-0 bg-white">
                 <div className="px-6 py-3 border-b border-neutral-100 flex items-center justify-between">
                     <h2 className="font-serif text-xl font-semibold text-neutral-900">
-                        Week {params.number}: Consumer Theory
+                        Week {number}: Consumer Theory
                     </h2>
                     <StatusBadge weekId={weekId} />
                 </div>

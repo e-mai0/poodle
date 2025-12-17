@@ -1,6 +1,6 @@
 import { inngest } from "@/lib/inngest/client";
 import { createClient } from "@supabase/supabase-js";
-import { LlamaParseReader } from "llama-parse";
+import { LlamaParse } from "llama-parse";
 import { google } from "@ai-sdk/google";
 import { embedMany } from "ai";
 import { writeFile, unlink } from "fs/promises";
@@ -32,17 +32,12 @@ export const ingestDocument = inngest.createFunction(
         // 2. Parse using LlamaParse
         const markdownContent = await step.run("parse-pdf", async () => {
             const fileBuffer = Buffer.from(fileBase64, 'base64');
-            const tempPath = join(os.tmpdir(), `doc-${documentId}.pdf`);
-            await writeFile(tempPath, fileBuffer);
+            const parser = new LlamaParse({ apiKey: process.env.LLAMA_CLOUD_API_KEY! });
 
-            try {
-                // Assuming llamaindex reader usage:
-                const reader = new LlamaParseReader({ resultType: "markdown" });
-                const documents = await reader.loadData(tempPath);
-                return documents.map(doc => doc.text).join("\n\n");
-            } finally {
-                await unlink(tempPath).catch(() => { });
-            }
+            // Convert Buffer to Blob for parseFile
+            const blob = new Blob([fileBuffer], { type: 'application/pdf' });
+            const result = await parser.parseFile(blob);
+            return result.markdown;
         });
 
         // 3. Chunk parsed Markdown

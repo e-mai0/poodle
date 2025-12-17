@@ -1,18 +1,19 @@
 import Link from "next/link";
 import { BookOpen, Home, ChevronRight } from "lucide-react";
 
-export default function PaperLayout({
+export default async function PaperLayout({
     children,
     params,
 }: {
     children: React.ReactNode;
-    params: { id: string };
+    params: Promise<{ id: string }>;
 }) {
+    const { id } = await params;
     // Mock weeks data
     const weeks = Array.from({ length: 8 }, (_, i) => ({
         id: i + 1,
         title: `Week ${i + 1}`,
-        href: `/papers/${params.id}/weeks/${i + 1}`,
+        href: `/papers/${id}/weeks/${i + 1}`,
     }));
 
     return (
@@ -25,7 +26,7 @@ export default function PaperLayout({
                     </Link>
                     <ChevronRight className="h-4 w-4 text-neutral-300" />
                     <span className="font-serif font-semibold text-lg text-neutral-900 capitalize">
-                        {params.id}
+                        {id}
                     </span>
                 </div>
 
