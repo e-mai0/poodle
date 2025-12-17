@@ -57,5 +57,5 @@ ${context}
         temperature: 0.2,
     });
 
-    return result.toDataStreamResponse();
+    return result.toTextStreamResponse();
 }
