@@ -20,30 +20,59 @@ export async function POST(req: Request) {
         value: query,
     });
 
-    // 3. Retrieve relevant chunks
-    const { data: chunks, error } = await supabase.rpc("match_documents", {
+    // 3. Retrieve relevant chunks using Hybrid Search
+    const { data: chunks, error } = await supabase.rpc("hybrid_search", {
+        query_text: query,
         query_embedding: embedding,
-        match_threshold: 0.5, // Adjust based on testing
+        match_threshold: 0.5,
         match_count: 5,
         filter_week_id: weekId,
     });
 
     if (error) {
-        console.error("Vector search error:", error);
+        console.error("Hybrid search error:", error);
         return new Response("Error retrieving documents", { status: 500 });
     }
 
-    // 4. Construct Context
-    const context = chunks?.map((c: any) => c.content).join("\n\n---\n\n") || "";
+    // 4. Fetch Notation Dictionary for the week
+    const { data: notation } = await supabase
+        .from('notation_configs')
+        .select('symbol, definition')
+        .eq('week_id', weekId);
 
-    // 5. System Prompt
-    const systemPrompt = `You are a rigid Cambridge Economics Supervisor.
+    const notationContext = notation?.map(n => `- ${n.symbol}: ${n.definition}`).join('\n') || "None defined.";
 
-You must:
-- Use standard LaTeX notation for all mathematics (e.g. $ x^2 $, $$ \int f(x) dx $$)
-- Only reason using the provided context
-- Never introduce variables, assumptions, or steps not present in the context
-- If the context is insufficient, state explicitly that the notes do not justify the claim
+    // 5. Source Diversity Check (Ensure at least one of each type if available)
+    const diverseChunks = chunks || [];
+    const sourceTypes = ['Lecture', 'Textbook', 'Supervision'];
+    const selectedChunks: any[] = [];
+
+    sourceTypes.forEach(type => {
+        const chunk = diverseChunks.find((c: any) => c.source_type === type);
+        if (chunk) selectedChunks.push(chunk);
+    });
+
+    // Fill the rest with top matches (avoid duplicates)
+    diverseChunks.forEach((c: any) => {
+        if (!selectedChunks.find(sc => sc.id === c.id) && selectedChunks.length < 5) {
+            selectedChunks.push(c);
+        }
+    });
+
+    // 6. Construct Context
+    const context = selectedChunks.map((c: any) => `[Source: ${c.source_type}] (Density: ${c.mathematical_density.toFixed(2)})\n${c.content}`).join("\n\n---\n\n") || "";
+
+    // 7. System Prompt (The Supervisor Logic)
+    const systemPrompt = `You are a Senior Cambridge Economics Supervisor.
+
+NOTATION DICTIONARY:
+${notationContext}
+
+STRICT pedagogical style:
+1. Use ONLY the symbols defined in the Notation Dictionary.
+2. If the user asks a question, identify if the Lecture and Textbook disagree; if so, prioritize the Lecture's derivation but note the Textbook's alternative.
+3. MATHEMATICAL RIGOR: All derivations must be step-by-step. If a variable is mentioned, it must be defined.
+4. FORMATTING: Use $$...$$ for standalone equations and $...$ for inline variables. Use \\mathbf{...} for vectors.
 
 CONTEXT:
 ${context}

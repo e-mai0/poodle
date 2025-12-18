@@ -24,7 +24,7 @@
     "cva": "^0.0.0",
     "framer-motion": "^12.23.26",
     "inngest": "^3.31.1",
-    "katex": "^0.16.27",
+    "katex": "^0.16.9",
     "llama-parse": "^0.1.0",
     "llamaindex": "^0.12.1",
     "lucide-react": "^0.561.0",
