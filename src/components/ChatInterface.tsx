@@ -2,6 +2,22 @@
 
 import { useChat } from "@ai-sdk/react";
 import { Send, Sparkles } from "lucide-react";
+
+interface Message {
+    id: string;
+    role: 'function' | 'system' | 'user' | 'assistant' | 'data' | 'tool';
+    content: string;
+    createdAt?: Date;
+    toolInvocations?: Array<any>;
+}
+
+interface ChatHelpers {
+    messages: Message[];
+    input: string;
+    handleInputChange: (e: React.ChangeEvent<HTMLInputElement> | React.ChangeEvent<HTMLTextAreaElement>) => void;
+    handleSubmit: (e: React.FormEvent<HTMLFormElement>, chatRequestOptions?: any) => void;
+    isLoading: boolean;
+}
 import ReactMarkdown from "react-markdown";
 import remarkMath from "remark-math";
 import rehypeKatex from "rehype-katex";
@@ -11,10 +27,9 @@ import { ScrollArea } from "./ui/scroll-area";
 import { cn } from "@/lib/utils";
 
 export default function ChatInterface({ weekId }: { weekId?: string }) {
-    // @ts-ignore - bypassing specific type mismatch for build
     const { messages, input, handleInputChange, handleSubmit, isLoading } =
         useChat({
-            api: "/api/chat",
+            // api: "/api/chat", // default
             body: { weekId },
             initialMessages: [
                 {
@@ -22,8 +37,8 @@ export default function ChatInterface({ weekId }: { weekId?: string }) {
                     role: "assistant",
                     content: "Good afternoon. I am ready to supervise your work on this topic. Please begin.",
                 },
-            ],
-        } as any);
+            ] as Message[],
+        } as any) as unknown as ChatHelpers;
 
     return (
         <div className="flex flex-col h-full bg-white border-l border-neutral-200">
