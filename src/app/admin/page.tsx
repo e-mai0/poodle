@@ -26,8 +26,16 @@ export default function AdminPage() {
     const [uploading, setUploading] = useState(false);
     const [uploads, setUploads] = useState<any[]>([]);
 
+    const [configError, setConfigError] = useState<string | null>(null);
+
     useEffect(() => {
-        setSupabase(createClient());
+        try {
+            setSupabase(createClient());
+        } catch (err: any) {
+            console.error("Supabase client init failed:", err);
+            setConfigError(err.message);
+            toast.error("Configuration Error", { description: err.message });
+        }
     }, []);
 
     // Real-time subscription to 'documents'
@@ -124,6 +132,16 @@ export default function AdminPage() {
                     <h1 className="text-4xl font-serif font-bold tracking-tight text-slate-900">Administrative Core</h1>
                     <p className="text-slate-500 font-light">Manage syllabus materials and ingest pipeline.</p>
                 </div>
+
+                {configError && (
+                    <div className="rounded-lg border border-red-200 bg-red-50 p-4 text-red-800 flex items-center gap-3">
+                        <AlertCircle className="h-5 w-5" />
+                        <div>
+                            <p className="font-semibold">Configuration Error</p>
+                            <p className="text-sm">{configError}</p>
+                        </div>
+                    </div>
+                )}
 
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
 
