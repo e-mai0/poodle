@@ -9,7 +9,7 @@ import * as os from 'os';
 
 export const ingestDocument = inngest.createFunction(
     { id: "ingest-document" },
-    { event: "documents/uploaded" },
+    { event: "app/process.file" },
     async ({ event, step }) => {
         const { documentId, storagePath } = event.data;
 
@@ -22,7 +22,7 @@ export const ingestDocument = inngest.createFunction(
         // Return base64 to avoid serialization issues
         const fileBase64 = await step.run("download-file", async () => {
             const { data, error } = await supabase.storage
-                .from("documents") // bucket name
+                .from("materials") // bucket name
                 .download(storagePath);
 
             if (error) throw new Error(`Failed to download file: ${error.message}`);
@@ -40,6 +40,13 @@ export const ingestDocument = inngest.createFunction(
             } as any);
             const blob = new Blob([fileBuffer], { type: 'application/pdf' });
             const result = await parser.parseFile(blob);
+
+            // Save Markdown to Storage for Reader Mode
+            const mdPath = storagePath.replace('.pdf', '.md');
+            await supabase.storage
+                .from("materials")
+                .upload(mdPath, result.markdown, { upsert: true, contentType: 'text/markdown' });
+
             return result.markdown;
         });
 

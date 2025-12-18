@@ -13,6 +13,7 @@ create table weeks (
   id uuid primary key default gen_random_uuid(),
   paper_id uuid references papers(id) on delete cascade not null,
   week_number int not null,
+  term text not null, -- 'Michaelmas', 'Lent', 'Easter'
   topic text not null
 );
 
