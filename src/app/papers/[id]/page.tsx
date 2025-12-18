@@ -29,27 +29,19 @@ const getMaterialBadges = (docs: any[]) => {
 };
 
 export default async function SyllabusPage({ params }: { params: Promise<{ id: string }> }) {
-    const supabase = createClient();
+    const supabase = await createClient();
     const { id } = await params;
 
     // Fetch Paper Details
     const { data: paper, error: paperError } = await supabase
         .from('papers')
         .select('*')
-        .eq('id', id) // Assuming id is the paper ID. If it's 1-5, we might need to query by some other field or assume ID is UUID.
-        // The user prompts implies selecting "Paper 1-5". 
-        // In db schema, `papers` has `id` (uuid).
-        // The URL is `/papers/[id]`. Let's assume `id` is the UUID.
+        .eq('id', id)
         .single();
 
     if (paperError || !paper) {
-        // For demo robustness, if UUID is invalid, maybe try to match map? 
-        // Or just 404. Let's just 404 for now.
-        // Actually, user prompts said "Select Paper (1-5)".
-        // If user navigates manually to /papers/1, that won't work if ID is UUID.
-        // But for now let's assume valid navigation.
-        // notFound(); 
-        // Let's not strict 404 yet to allow debugging if needed.
+        // Handle error or 404
+        // console.error("Paper not found", paperError);
     }
 
     // Fetch Weeks and Documents
@@ -99,7 +91,6 @@ export default async function SyllabusPage({ params }: { params: Promise<{ id: s
                                 {termWeeks.map((week) => {
                                     const badges = getMaterialBadges(week.documents);
                                     const hasMaterials = badges.length > 0;
-                                    const isComplete = hasMaterials; // Simplistic logic for "completed" or "active"
 
                                     return (
                                         <div key={week.id} className="relative group">

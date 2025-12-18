@@ -2,12 +2,12 @@ import { createClient } from "@/lib/supabase/server";
 import { ResizableHandle, ResizablePanel, ResizablePanelGroup } from "@/components/ui/resizable";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import ChatInterface from "@/components/ChatInterface"; // Correct casing
+import ChatInterface from "@/components/ChatInterface";
 import { Separator } from "@/components/ui/separator";
 import { DocumentViewer } from "@/components/document-viewer";
 
 export default async function WorkspacePage({ params }: { params: Promise<{ id: string; weekId: string }> }) {
-    const supabase = createClient();
+    const supabase = await createClient();
     const { id: paperId, weekId } = await params;
 
     // Fetch Week & Documents
@@ -19,20 +19,17 @@ export default async function WorkspacePage({ params }: { params: Promise<{ id: 
 
     if (!week) return <div>Week not found</div>;
 
-    const documents = week.documents || [];
+    const documents: any[] = week.documents || [];
     const lectures = documents.filter((d: any) => d.type === 'lecture_notes');
     const textbooks = documents.filter((d: any) => d.type === 'textbook');
     const supervisions = documents.filter((d: any) => d.type === 'handout');
 
     // Helper to get Signed URL
     const getSignedUrl = async (path: string) => {
-        // Try to get .md file first
         const mdPath = path.replace('.pdf', '.md');
-        // We try to sign the MD path.
         const { data, error } = await supabase.storage
             .from('materials')
             .createSignedUrl(mdPath, 3600);
-
         return data?.signedUrl;
     };
 

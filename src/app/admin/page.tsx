@@ -9,16 +9,13 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { toast } from "sonner";
 import { Loader2, CheckCircle2, FileText, Upload, AlertCircle } from "lucide-react";
-import { createClient } from "@supabase/supabase-js";
+import { createClient } from "@/lib/supabase/client";
 import { motion, AnimatePresence } from "framer-motion";
 
-// Initialize Supabase Client for Realtime
-const supabase = createClient(
-    process.env.NEXT_PUBLIC_SUPABASE_URL!,
-    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
-);
+import { SupabaseClient } from "@supabase/supabase-js";
 
 export default function AdminPage() {
+    const [supabase, setSupabase] = useState<SupabaseClient | null>(null);
     const [paperId, setPaperId] = useState<string>("");
     const [term, setTerm] = useState<string>("");
     const [week, setWeek] = useState<string>("");
@@ -27,8 +24,14 @@ export default function AdminPage() {
     const [uploading, setUploading] = useState(false);
     const [uploads, setUploads] = useState<any[]>([]);
 
+    useEffect(() => {
+        setSupabase(createClient());
+    }, []);
+
     // Real-time subscription to 'documents'
     useEffect(() => {
+        if (!supabase) return;
+
         const channel = supabase
             .channel('schema-db-changes')
             .on(
@@ -59,7 +62,7 @@ export default function AdminPage() {
         return () => {
             supabase.removeChannel(channel);
         };
-    }, []);
+    }, [supabase]);
 
     const handleUpload = async (e: React.FormEvent) => {
         e.preventDefault();
