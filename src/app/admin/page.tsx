@@ -14,6 +14,8 @@ import { motion, AnimatePresence } from "framer-motion";
 
 import { SupabaseClient } from "@supabase/supabase-js";
 
+export const dynamic = 'force-dynamic';
+
 export default function AdminPage() {
     const [supabase, setSupabase] = useState<SupabaseClient | null>(null);
     const [paperId, setPaperId] = useState<string>("");
