@@ -115,8 +115,9 @@ export default function AdminPage() {
                     }));
                 }
             }
-        } catch (err) {
-            toast.error("Error", { description: "Something went wrong." });
+        } catch (err: any) {
+            console.error("Upload error:", err);
+            toast.error("Error", { description: err.message || "Something went wrong." });
         } finally {
             setUploading(false);
             // Reset file input if needed

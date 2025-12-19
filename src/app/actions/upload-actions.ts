@@ -4,9 +4,13 @@ import { createClient } from "@supabase/supabase-js";
 import { inngest } from "@/lib/inngest/client";
 
 export async function uploadFiles(formData: FormData) {
+    if (!process.env.NEXT_PUBLIC_SUPABASE_URL || !process.env.SUPABASE_SERVICE_ROLE_KEY) {
+        return { error: "Server Configuration Error: Missing Supabase Keys" };
+    }
+
     const supabase = createClient(
-        process.env.NEXT_PUBLIC_SUPABASE_URL!,
-        process.env.SUPABASE_SERVICE_ROLE_KEY!
+        process.env.NEXT_PUBLIC_SUPABASE_URL,
+        process.env.SUPABASE_SERVICE_ROLE_KEY
     );
 
     const paperId = formData.get('paperId') as string;
